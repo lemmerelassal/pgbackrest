@@ -1213,6 +1213,32 @@ static const ParseRuleOption parseRuleOption[CFG_OPTION_TOTAL] =
         ),                                                                                                 // opt/archive-mode-check
     ),                                                                                                     // opt/archive-mode-check
     // -----------------------------------------------------------------------------------------------------------------------------
+    PARSE_RULE_OPTION                                                                                          // opt/archive-pitr
+    (                                                                                                          // opt/archive-pitr
+        PARSE_RULE_OPTION_NAME("archive-pitr"),                                                                // opt/archive-pitr
+        PARSE_RULE_OPTION_TYPE(Boolean),                                                                       // opt/archive-pitr
+        PARSE_RULE_OPTION_NEGATE(true),                                                                        // opt/archive-pitr
+        PARSE_RULE_OPTION_RESET(true),                                                                         // opt/archive-pitr
+        PARSE_RULE_OPTION_REQUIRED(true),                                                                      // opt/archive-pitr
+        PARSE_RULE_OPTION_SECTION(Global),                                                                     // opt/archive-pitr
+                                                                                                               // opt/archive-pitr
+        PARSE_RULE_OPTION_COMMAND_ROLE_MAIN_VALID_LIST                                                         // opt/archive-pitr
+        (                                                                                                      // opt/archive-pitr
+            PARSE_RULE_OPTION_COMMAND(Check)                                                                   // opt/archive-pitr
+        ),                                                                                                     // opt/archive-pitr
+                                                                                                               // opt/archive-pitr
+        PARSE_RULE_OPTIONAL                                                                                    // opt/archive-pitr
+        (                                                                                                      // opt/archive-pitr
+            PARSE_RULE_OPTIONAL_GROUP                                                                          // opt/archive-pitr
+            (                                                                                                  // opt/archive-pitr
+                PARSE_RULE_OPTIONAL_DEFAULT                                                                    // opt/archive-pitr
+                (                                                                                              // opt/archive-pitr
+                    PARSE_RULE_VAL_BOOL_FALSE,                                                                 // opt/archive-pitr
+                ),                                                                                             // opt/archive-pitr
+            ),                                                                                                 // opt/archive-pitr
+        ),                                                                                                     // opt/archive-pitr
+    ),                                                                                                         // opt/archive-pitr
+    // -----------------------------------------------------------------------------------------------------------------------------
     PARSE_RULE_OPTION                                                                                  // opt/archive-push-queue-max
     (                                                                                                  // opt/archive-push-queue-max
         PARSE_RULE_OPTION_NAME("archive-push-queue-max"),                                              // opt/archive-push-queue-max
@@ -11608,6 +11634,7 @@ static const uint8_t optionResolveOrder[] =
     cfgOptArchiveHeaderCheck,                                                                                   // opt-resolve-order
     cfgOptArchiveMissingRetry,                                                                                  // opt-resolve-order
     cfgOptArchiveMode,                                                                                          // opt-resolve-order
+    cfgOptArchivePitr,                                                                                          // opt-resolve-order
     cfgOptArchivePushQueueMax,                                                                                  // opt-resolve-order
     cfgOptArchiveTimeout,                                                                                       // opt-resolve-order
     cfgOptBackupStandby,                                                                                        // opt-resolve-order

@@ -1126,6 +1126,15 @@ option:
       list:
         - true
 
+  archive-pitr:
+    section: global
+    type: boolean
+    default: false
+    command:
+      check: {}
+    command-role:
+      main: {}
+
   backup-standby:
     section: global
     type: string-id

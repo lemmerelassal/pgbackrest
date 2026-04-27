@@ -183,7 +183,74 @@ cmdCheck(void)
     MEM_CONTEXT_TEMP_BEGIN()
     {
         if (cfgOptionBool(cfgOptReport))
+        {
             ioFdWriteOneStr(STDOUT_FILENO, checkReport());
+        }
+        else if (cfgOptionBool(cfgOptArchivePitr))
+        {
+            // PITR archive continuity check — does not require a live database connection. pg_control is read from disk to
+            // obtain the cluster's WAL segment size and version for iterating WAL segment names.
+            bool stanzaSpecified = cfgOptionTest(cfgOptStanza);
+            StringList *stanzaList;
+
+            if (stanzaSpecified)
+            {
+                stanzaList = strLstNew();
+                strLstAdd(stanzaList, cfgOptionStr(cfgOptStanza));
+            }
+            else
+            {
+                stanzaList = cfgParseStanzaList();
+
+                if (strLstSize(stanzaList) == 0)
+                {
+                    LOG_WARN(
+                        "no stanzas found to check\n"
+                        "HINT: are there non-empty stanza sections in the configuration?");
+                }
+            }
+
+            for (unsigned int stanzaIdx = 0; stanzaIdx < strLstSize(stanzaList); stanzaIdx++)
+            {
+                if (!stanzaSpecified)
+                {
+                    const String *const stanza = strLstGet(stanzaList, stanzaIdx);
+                    LOG_INFO_FMT("check stanza '%s'", strZ(stanza));
+
+                    storageHelperFree();
+                    protocolFree();
+                    cfgLoadStanza(stanza);
+                }
+
+                // Read pg_control from disk — no live connection needed
+                const PgControl pgControl = pgControlFromFile(storagePgIdx(0), NULL);
+
+                unsigned int totalErrors = 0;
+
+                for (unsigned int repoIdx = 0; repoIdx < cfgOptionGroupIdxTotal(cfgOptGrpRepo); repoIdx++)
+                {
+                    LOG_INFO_FMT(CFGCMD_CHECK " %s PITR archive", cfgOptionGroupName(cfgOptGrpRepo, repoIdx));
+
+                    // Pull down remote storage / encryption settings before use
+                    const Storage *const storageRepo = storageRepoIdx(repoIdx);
+
+                    totalErrors += checkArchivePitr(
+                        storageRepo, storagePgIdx(0), pgControl.version, pgControl.walSegmentSize,
+                        cfgOptionIdxStrId(cfgOptRepoCipherType, repoIdx),
+                        cfgOptionIdxStrNull(cfgOptRepoCipherPass, repoIdx));
+                }
+
+                if (totalErrors > 0)
+                {
+                    THROW_FMT(
+                        ArchiveCommandInvalidError,
+                        "PITR archive check failed: %u WAL segment(s) missing from archive\n"
+                        "HINT: run 'pgbackrest archive-push' on the primary to archive missing segments.\n"
+                        "HINT: if segments are absent from pg_wal as well, a new backup may be required.",
+                        totalErrors);
+                }
+            }
+        }
         else
         {
             // Build stanza list based on whether a stanza was specified or not
